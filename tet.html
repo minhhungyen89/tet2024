@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+    <title>Fireworks with Sound</title>
+</head>
+<body>
+    <canvas id="fireworksCanvas"></canvas>
+    <audio id="fireworkSound" preload="auto">
+        <source src="path/to/firework-sound.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const canvas = document.getElementById("fireworksCanvas");
+            const ctx = canvas.getContext("2d");
+            const fireworkSound = document.getElementById("fireworkSound");
+
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            function randomInt(min, max) {
+                return Math.floor(Math.random() * (max - min + 1) + min);
+            }
+
+            function Firework() {
+                this.x = randomInt(0, canvas.width);
+                this.y = canvas.height;
+                this.color = `rgb(${randomInt(0, 255)}, ${randomInt(0, 255)}, ${randomInt(0, 255)})`;
+                this.radius = 2;
+                this.velocity = {
+                    x: randomInt(-2, 2),
+                    y: randomInt(-15, -8)
+                };
+                this.gravity = 0.2;
+                this.opacity = 1;
+                this.hasExploded = false;
+            }
+
+            Firework.prototype.draw = function() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.opacity;
+                ctx.fill();
+                ctx.closePath();
+            };
+
+            Firework.prototype.update = function() {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+
+                this.velocity.y += this.gravity;
+                this.opacity -= 0.02;
+
+                if (this.opacity <= 0) {
+                    this.hasExploded = true;
+                }
+            };
+
+            function createFirework() {
+                const firework = new Firework();
+                fireworks.push(firework);
+                fireworkSound.currentTime = 0;
+                fireworkSound.play();
+            }
+
+            function createExplosion(firework) {
+                for (let i = 0; i < 30; i++) {
+                    particles.push(new Particle(firework.x, firework.y, firework.color));
+                }
+            }
+
+            function Particle(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.radius = 2;
+                this.velocity = {
+                    x: randomInt(-5, 5),
+                    y: randomInt(-5, 5)
+                };
+                this.opacity = 1;
+            }
+
+            Particle.prototype.draw = function() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.opacity;
+                ctx.fill();
+                ctx.closePath();
+            };
+
+            Particle.prototype.update = function() {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.opacity -= 0.02;
+            };
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                fireworks.forEach(firework => {
+                    if (!firework.hasExploded) {
+                        firework.draw();
+                        firework.update();
+                    } else {
+                        createExplosion(firework);
+                        fireworks.splice(fireworks.indexOf(firework), 1);
+                    }
+                });
+
+                particles.forEach(particle => {
+                    particle.draw();
+                    particle.update();
+                });
+
+                particles = particles.filter(particle => particle.opacity > 0);
+
+                if (Math.random() < 0.03) {
+                    createFirework();
+                }
+
+                requestAnimationFrame(animate);
+            }
+
+            const fireworks = [];
+            let particles = [];
+
+            animate();
+        });
+    </script>
+</body>
+</html>
